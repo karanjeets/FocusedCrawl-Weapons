@@ -68,6 +68,10 @@ public class Glocktalk implements InteractiveSeleniumHandler {
        public String processDriver(WebDriver driver) {
                StringBuffer buffer = new StringBuffer();
                
+               // Extract content - getText doesn't return any links
+               String content = driver.findElement(By.tagName("body")).getText();
+               buffer.append(content).append("\n");
+               
                // Extract threads from a forum
                if(driver.getCurrentUrl().startsWith("http://www.glocktalk.com/forum")) {
                        List<WebElement> threadTopics = driver.findElements(By.xpath("//h3[@class='title']"));
@@ -84,7 +88,8 @@ public class Glocktalk implements InteractiveSeleniumHandler {
                // Extract Next Page Link
                List<WebElement> nav = driver.findElements(By.xpath("//div[@class='PageNav']//nav//*[@class='text']"));
                //System.out.println(nav.get(nav.size() - 1).getAttribute("href"));
-               buffer.append(nav.get(nav.size() - 1).getAttribute("href")).append("\n");
+               if(nav.size() > 0)
+            	   buffer.append(nav.get(nav.size() - 1).getAttribute("href")).append("\n");
                
                
                // Extract all links from a thread
@@ -103,7 +108,8 @@ public class Glocktalk implements InteractiveSeleniumHandler {
                                //System.out.println(linkValue);
                                filteredLinks.add(linkValue);
                        }
-                       buffer.append(filteredLinks);
+                       if(filteredLinks.size() > 0)
+                    	   buffer.append(filteredLinks).append("\n");
                }
                //System.out.println();
                return buffer.toString();
@@ -118,7 +124,7 @@ public class Glocktalk implements InteractiveSeleniumHandler {
                Glocktalk glocktalk = new Glocktalk();
                WebDriver driver = new FirefoxDriver();
                try {
-                       driver.get("http://www.glocktalk.com/threads/beretta-m9a3.1613812/");
+                       driver.get("http://www.glocktalk.com/forum/general-firearms-forum.82");
                        System.out.println(glocktalk.processDriver(driver));
                } catch(Exception e) {
                        e.printStackTrace();
