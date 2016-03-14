@@ -79,7 +79,7 @@ public class Glocktalk implements InteractiveSeleniumHandler {
                        for(WebElement element : threadTopics) {
                                WebElement anchor = element.findElement(By.tagName("a"));
                                //System.out.println(anchor.getAttribute("href"));
-                               buffer.append(anchor.getAttribute("href")).append("\n");
+                               buffer.append("<a href=\"").append(anchor.getAttribute("href")).append("\" />").append("\n");
                        }
                        
                }
@@ -89,7 +89,7 @@ public class Glocktalk implements InteractiveSeleniumHandler {
                List<WebElement> nav = driver.findElements(By.xpath("//div[@class='PageNav']//nav//*[@class='text']"));
                //System.out.println(nav.get(nav.size() - 1).getAttribute("href"));
                if(nav.size() > 0)
-            	   buffer.append(nav.get(nav.size() - 1).getAttribute("href")).append("\n");
+            	   buffer.append("<a href=\"").append(nav.get(nav.size() - 1).getAttribute("href")).append("\" />").append("\n");
                
                
                // Extract all links from a thread
@@ -97,7 +97,7 @@ public class Glocktalk implements InteractiveSeleniumHandler {
                        List<WebElement> links = driver.findElements(By.xpath("//ol[@id='messageList']//*[@href]"));
                        Set<String> filteredLinks = new HashSet<String>();
                        for(WebElement link : links) {
-                               String linkValue = link.getAttribute("href");
+                               String linkValue = "<a href=\"" + link.getAttribute("href") + "\" />";
                                if (linkValue.startsWith("http://www.glocktalk.com/account")
                                                || linkValue.startsWith("http://www.glocktalk.com/misc") 
                                                || linkValue.startsWith("http://www.glocktalk.com/goto")
@@ -124,8 +124,8 @@ public class Glocktalk implements InteractiveSeleniumHandler {
                Glocktalk glocktalk = new Glocktalk();
                WebDriver driver = new FirefoxDriver();
                try {
-                       driver.get("http://www.glocktalk.com/forum/general-firearms-forum.82");
-                       System.out.println(glocktalk.processDriver(driver));
+                       driver.get("http://www.glocktalk.com/forum/general-firearms-forum.82/");
+                       System.out.println(new String(glocktalk.processDriver(driver).getBytes("UTF-8")));
                } catch(Exception e) {
                        e.printStackTrace();
                }
