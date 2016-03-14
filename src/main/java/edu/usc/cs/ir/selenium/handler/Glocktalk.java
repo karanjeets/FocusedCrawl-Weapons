@@ -30,7 +30,34 @@ import edu.usc.cs.ir.selenium.model.InteractiveSeleniumHandler;
 
 /**
  * Selenium Handler for http://www.glocktalk.com/ to extract weapon related posts
- * Seedlist is as below:
+ * 
+ * Command to extract URLs from this host:
+ * curl -s "http://www.glocktalk.com" | grep -ioE 'href="[-A-Za-z0-9+&@#/%?=~_|!:,.;]*"' | awk -F "href=" '{print $2}'| grep -v "#"
+ * 
+ * Seed list is as below:
+ * http://www.glocktalk.com/forum/general-firearms-forum.82/
+ * http://www.glocktalk.com/forum/tactical-shotguns.180/
+ * http://www.glocktalk.com/forum/black-rifle-forum.93/
+ * http://www.glocktalk.com/forum/1911-forums.77/
+ * http://www.glocktalk.com/forum/the-kalashnikov-klub.94/
+ * http://www.glocktalk.com/forum/rimfire-forum.61/
+ * http://www.glocktalk.com/forum/gun-related-clubs.164/
+ * http://www.glocktalk.com/forum/general-competition.25/
+ * http://www.glocktalk.com/forum/heckler-koch-forum.129/
+ * http://www.glocktalk.com/forum/gate-info-announcements.248/
+ * http://www.glocktalk.com/forum/gate-self-defense-forum.256/
+ * http://www.glocktalk.com/forum/gate-ar-15-forum.257/
+ * http://www.glocktalk.com/forum/gate-nfa-class-iii.251/
+ * http://www.glocktalk.com/forum/gate-long-range-shooting.252/
+ * http://www.glocktalk.com/forum/gate-survival-preparedness.255/
+ * http://www.glocktalk.com/forum/gate-night-vision-forum.259/
+ * http://www.glocktalk.com/forum/firearms-listings.39/
+ * http://www.glocktalk.com/forum/gun-parts-accessories.40/
+ * http://www.glocktalk.com/forum/edged-weapons-related-items.46/
+ * http://www.glocktalk.com/forum/holsters-related-items.41/
+ * http://www.glocktalk.com/forum/misc-gun-stuff.42/
+ * http://www.glocktalk.com/forum/wanted-to-buy.45/
+ * http://www.glocktalk.com/forum/gun-parts-access.22/
  * 
  * @author karanjeets
  *
