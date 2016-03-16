@@ -17,14 +17,19 @@
 
 package edu.usc.cs.ir.selenium.handler;
 
+import java.io.UnsupportedEncodingException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.firefox.FirefoxBinary;
 import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.firefox.FirefoxProfile;
 
 import edu.usc.cs.ir.selenium.model.InteractiveSeleniumHandler;
 
@@ -64,74 +69,156 @@ import edu.usc.cs.ir.selenium.model.InteractiveSeleniumHandler;
  */
 public class Glocktalk implements InteractiveSeleniumHandler {
 
-
+	   private Set<String> getThreadsFromForum(WebDriver driver) {
+		   Set<String> threads = new HashSet<String>();
+		   List<WebElement> threadTopics = driver.findElements(By.xpath("//h3[@class='title']"));
+           
+           for(WebElement element : threadTopics) {
+                   WebElement anchor = element.findElement(By.tagName("a"));
+                   //System.out.println(anchor.getAttribute("href"));
+                   threads.add("<a href=\"" + anchor.getAttribute("href") + "\" />");
+           }
+		   return threads;
+	   }
+	   
+	   private Set<String> getPostsFromThread(WebDriver driver) {
+		   List<WebElement> links = driver.findElements(By.xpath("//ol[@id='messageList']//*[@href|@src]"));
+           Set<String> filteredLinks = new HashSet<String>();
+           for(WebElement link : links) {
+        	   	   String linkValue = null;
+        	   	   if(link.getAttribute("src") != null && !link.getTagName().equals("img"))
+        	   		   continue;
+        	   	   if(link.getAttribute("src") != null)
+        	   		   linkValue = link.getAttribute("src");
+        	   	   else
+        	   		   linkValue = link.getAttribute("href");
+                   if (linkValue.startsWith("http://www.glocktalk.com/account")
+                                   || linkValue.startsWith("http://www.glocktalk.com/misc") 
+                                   || linkValue.startsWith("http://www.glocktalk.com/goto")
+                                   || linkValue.startsWith("http://www.glocktalk.com/social-forums")
+                                   || linkValue.startsWith("http://www.glocktalk.com/search")
+                                   || linkValue.contains("#"))
+                           continue;
+                   //System.out.println(linkValue);
+                   filteredLinks.add("<a href=\"" + linkValue + "\" />");
+           }
+           return filteredLinks;
+	   }
+	   
        public String processDriver(WebDriver driver) {
-               StringBuffer buffer = new StringBuffer();
+    	   	   StringBuffer buffer = new StringBuffer();
                
                // Extract content - getText doesn't return any links
                String content = driver.findElement(By.tagName("body")).getText();
                buffer.append(content).append("\n");
                
-               // Extract threads from a forum
+               // Extract threads from a forum through all of its navigation
                if(driver.getCurrentUrl().startsWith("http://www.glocktalk.com/forum")) {
-                       List<WebElement> threadTopics = driver.findElements(By.xpath("//h3[@class='title']"));
-                       
-                       for(WebElement element : threadTopics) {
-                               WebElement anchor = element.findElement(By.tagName("a"));
-                               //System.out.println(anchor.getAttribute("href"));
-                               buffer.append("<a href=\"").append(anchor.getAttribute("href")).append("\" />").append("\n");
-                       }
-                       
+            	   	   // Extract the last page number
+            	       List<WebElement> pages = driver.findElements(By.xpath("//div[@class='PageNav']//nav//a[@class='']"));
+            	   	   
+            	       buffer.append(getThreadsFromForum(driver)).append("\n");
+            	       
+            	       if(pages != null && !pages.isEmpty() && !pages.get(0).getText().trim().equals("1")) {
+            	    	   Integer lastPage = Integer.parseInt(pages.get(pages.size() - 1).getText());
+            	    	   
+            	    	   for(int i = 2; i <= lastPage; i++) {
+            	    		   try {
+	            	    		   driver.get(driver.getCurrentUrl().substring(0, driver.getCurrentUrl().lastIndexOf("/") + 1) + "page-" + i);
+            	    		   } catch(TimeoutException e) {
+            	    			   System.out.println("Timeout Exception for page = " + i);
+            	    		   } finally {
+            	    			   buffer.append(getThreadsFromForum(driver)).append("\n");
+            	    		   }
+            	    	   }
+            	       }
                }
-               
-               
-               // Extract Next Page Link
-               List<WebElement> nav = driver.findElements(By.xpath("//div[@class='PageNav']//nav//*[@class='text']"));
-               //System.out.println(nav.get(nav.size() - 1).getAttribute("href"));
-               if(nav.size() > 0)
-            	   buffer.append("<a href=\"").append(nav.get(nav.size() - 1).getAttribute("href")).append("\" />").append("\n");
-               
                
                // Extract all links from a thread
-               if(driver.getCurrentUrl().startsWith("http://www.glocktalk.com/threads")) {
-                       List<WebElement> links = driver.findElements(By.xpath("//ol[@id='messageList']//*[@href]"));
-                       Set<String> filteredLinks = new HashSet<String>();
-                       for(WebElement link : links) {
-                               String linkValue = "<a href=\"" + link.getAttribute("href") + "\" />";
-                               if (linkValue.startsWith("http://www.glocktalk.com/account")
-                                               || linkValue.startsWith("http://www.glocktalk.com/misc") 
-                                               || linkValue.startsWith("http://www.glocktalk.com/goto")
-                                               || linkValue.startsWith("http://www.glocktalk.com/social-forums")
-                                               || linkValue.startsWith("http://www.glocktalk.com/search")
-                                               || linkValue.contains("#"))
-                                       continue;
-                               //System.out.println(linkValue);
-                               filteredLinks.add(linkValue);
-                       }
-                       if(filteredLinks.size() > 0)
-                    	   buffer.append(filteredLinks).append("\n");
+               else if(driver.getCurrentUrl().startsWith("http://www.glocktalk.com/threads")) {
+            	       
+            	       // Extract the last page number
+            	       List<WebElement> pages = driver.findElements(By.xpath("//div[@class='PageNav']//nav//a[@class='']"));
+            	       
+            	       buffer.append(getPostsFromThread(driver)).append("\n");
+            	       if(pages != null && !pages.isEmpty() && !pages.get(0).getText().trim().equals("1")) {
+            	    	   Integer lastPage = Integer.parseInt(pages.get(pages.size() - 1).getText());
+            	    	   
+            	    	   for(int i = 2; i <= lastPage; i++) {
+            	    		   try {
+	            	    		   driver.get(driver.getCurrentUrl().substring(0, driver.getCurrentUrl().lastIndexOf("/") + 1) + "page-" + i);
+            	    		   } catch(TimeoutException e) {
+            	    			   System.out.println("Timeout Exception for page = " + i);
+            	    		   } finally {
+            	    			   buffer.append(getPostsFromThread(driver)).append("\n");
+            	    		   }
+            	    	   }
+            	       }
+            	       
                }
+               
+               // Extract User Images
+               else if(driver.getCurrentUrl().startsWith("http://www.glocktalk.com/members")) {
+            	   List<WebElement> srcLinks = driver.findElements(By.xpath("//div[@class='profilePage']//*[@src]"));
+                   Set<String> images = new HashSet<String>();
+                   for(WebElement link : srcLinks) {
+                	   	   String linkValue = null;
+                	   	   if(!link.getTagName().equals("img"))
+                	   		   continue;
+                	   	   linkValue = link.getAttribute("src");
+                           System.out.println(linkValue);
+                           images.add("<img src=\"" + linkValue + "\" />");
+                   }
+                   buffer.append(images);
+               }
+               
                //System.out.println();
                return buffer.toString();
        }
 
        public boolean shouldProcessURL(String URL) {
-               
-               return true;
+           if(URL.startsWith("http://www.glocktalk.com/forum") || URL.startsWith("http://www.glocktalk.com/threads") || URL.startsWith("http://www.glocktalk.com/members"))    
+        	   return true;
+           return false;
        }
        
        public static void main(String[] args) {
                Glocktalk glocktalk = new Glocktalk();
-               WebDriver driver = new FirefoxDriver();
+               FirefoxProfile profile = new FirefoxProfile();
+               profile.setPreference(FirefoxProfile.ALLOWED_HOSTS_PREFERENCE, "localhost");
+               profile.setPreference("dom.ipc.plugins.enabled.libflashplayer.so", "false");
+               profile.setPreference("permissions.default.stylesheet", 1);
+               profile.setPreference("permissions.default.image", 1);
+               
+               FirefoxBinary binary = new FirefoxBinary();
+               binary.setTimeout(TimeUnit.SECONDS.toMillis(180));
+               
+               WebDriver driver = new FirefoxDriver(binary, profile);
+               driver.manage().timeouts().pageLoadTimeout(10000, TimeUnit.MILLISECONDS);
+               
                try {
-                       driver.get("http://www.glocktalk.com/forum/general-firearms-forum.82/");
+                       driver.get("http://www.glocktalk.com/members/98_1le.51093/");
                        System.out.println(new String(glocktalk.processDriver(driver).getBytes("UTF-8")));
-               } catch(Exception e) {
-                       e.printStackTrace();
+               } 
+               catch(Exception e) {
+            	   if(e instanceof TimeoutException) {
+            		   System.out.println("Timeout Exception");
+            		   
+            		   try {
+       					System.out.println(new String(glocktalk.processDriver(driver).getBytes("UTF-8")));
+       				} catch (UnsupportedEncodingException e1) {
+       					// TODO Auto-generated catch block
+       					e1.printStackTrace();
+       				}
+       				
+            	   }
+                   //e.printStackTrace();
                }
                finally {
-                       if(driver != null)
-                               driver.quit();
+                       if(driver != null) {
+                    	   	driver.close();
+                            driver.quit();
+                       }
                }
        }
        
