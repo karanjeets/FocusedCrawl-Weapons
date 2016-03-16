@@ -108,6 +108,20 @@ public class Glocktalk implements InteractiveSeleniumHandler {
            return filteredLinks;
 	   }
 	   
+	   private Set<String> getImagesFromMedia(WebDriver driver) {
+		   List<WebElement> srcLinks = driver.findElements(By.xpath("//div[@class='gridSection gridGroup LightboxContainer LightboxLoadable']//*[@src]"));
+           Set<String> images = new HashSet<String>();
+           for(WebElement link : srcLinks) {
+        	   	   String linkValue = null;
+        	   	   if(!link.getTagName().equals("img"))
+        	   		   continue;
+        	   	   linkValue = link.getAttribute("src");
+                   System.out.println(linkValue);
+                   images.add("<img src=\"" + linkValue + "\" />");
+           }
+           return images;
+	   }
+	   
        public String processDriver(WebDriver driver) {
     	   	   StringBuffer buffer = new StringBuffer();
                
@@ -125,7 +139,7 @@ public class Glocktalk implements InteractiveSeleniumHandler {
             	    	   
             	    	   WebElement currentPage = driver.findElement(By.xpath("//div[@class='PageNav']//nav//a[@class='currentPage ']"));
             	    	   Integer currentPageNo = Integer.parseInt(currentPage.getText());
-            	    	   if(currentPageNo == 1 || currentPageNo % PAGE_FETCH_LIMIT == 0) {
+            	    	   if(currentPageNo % PAGE_FETCH_LIMIT == 1) {
 	            	    	   Integer lastPage = Integer.parseInt(pages.get(pages.size() - 1).getText());
 	            	    	   String currentUrl = driver.getCurrentUrl().substring(0, driver.getCurrentUrl().lastIndexOf("/") + 1);
 	            	    	   int i = currentPageNo + 1;
@@ -156,7 +170,7 @@ public class Glocktalk implements InteractiveSeleniumHandler {
             	    	   
             	    	   WebElement currentPage = driver.findElement(By.xpath("//div[@class='PageNav']//nav//a[@class='currentPage ']"));
             	    	   Integer currentPageNo = Integer.parseInt(currentPage.getText());
-            	    	   if(currentPageNo == 1 || currentPageNo % PAGE_FETCH_LIMIT == 0) {
+            	    	   if(currentPageNo % PAGE_FETCH_LIMIT == 1) {
 	            	    	   Integer lastPage = Integer.parseInt(pages.get(pages.size() - 1).getText());
 	            	    	   String currentUrl = driver.getCurrentUrl().substring(0, driver.getCurrentUrl().lastIndexOf("/") + 1);
 	            	    	   int i = currentPageNo + 1;
@@ -192,12 +206,44 @@ public class Glocktalk implements InteractiveSeleniumHandler {
                    buffer.append(images);
                }
                
+               // Extract Media - Images
+               else if(driver.getCurrentUrl().startsWith("http://www.glocktalk.com/media")) {
+            	   
+            	// Extract the last page number
+        	       List<WebElement> pages = driver.findElements(By.xpath("//div[@class='PageNav']//nav//a[@class='']"));
+        	       buffer.append(getImagesFromMedia(driver)).append("\n");
+        	       
+        	       if(pages != null && !pages.isEmpty()) {
+        	    	   
+        	    	   WebElement currentPage = driver.findElement(By.xpath("//div[@class='PageNav']//nav//a[@class='currentPage ']"));
+        	    	   Integer currentPageNo = Integer.parseInt(currentPage.getText());
+        	    	   if(currentPageNo % PAGE_FETCH_LIMIT == 1) {
+            	    	   Integer lastPage = Integer.parseInt(pages.get(pages.size() - 1).getText());
+            	    	   String currentUrl = driver.getCurrentUrl().substring(0, driver.getCurrentUrl().lastIndexOf("/"));
+            	    	   int i = currentPageNo + 1;
+            	    	   for(; i < (currentPageNo + PAGE_FETCH_LIMIT) && i <= lastPage; i++) {
+            	    		   try {
+	            	    		   driver.get(currentUrl + "?page=" + i);
+            	    		   } catch(TimeoutException e) {
+            	    			   System.out.println("Timeout Exception for page = " + i);
+            	    		   } finally {
+            	    			   buffer.append(getImagesFromMedia(driver)).append("\n");
+            	    		   }
+            	    	   }
+            	    	   
+            	    	   if(i <= lastPage)
+            	    		   buffer.append("<a href=\"").append(currentUrl + "?page=" + i).append("\" />").append("\n");
+        	    	   }
+        	       }
+               }
+               
                //System.out.println();
                return buffer.toString();
        }
 
        public boolean shouldProcessURL(String URL) {
-           if(URL.startsWith("http://www.glocktalk.com/forum") || URL.startsWith("http://www.glocktalk.com/threads") || URL.startsWith("http://www.glocktalk.com/members"))    
+		if (URL.startsWith("http://www.glocktalk.com/forum") || URL.startsWith("http://www.glocktalk.com/threads")
+				|| URL.startsWith("http://www.glocktalk.com/members") || URL.startsWith("http://www.glocktalk.com/media"))    
         	   return true;
            return false;
        }
@@ -217,7 +263,7 @@ public class Glocktalk implements InteractiveSeleniumHandler {
                driver.manage().timeouts().pageLoadTimeout(10000, TimeUnit.MILLISECONDS);
                
                try {
-                       driver.get("http://www.glocktalk.com/threads/rimfire-pics.726737/page-10");
+                       driver.get("http://www.glocktalk.com/media?page=6");
                        System.out.println(new String(glocktalk.processDriver(driver).getBytes("UTF-8")));
                } 
                catch(Exception e) {
