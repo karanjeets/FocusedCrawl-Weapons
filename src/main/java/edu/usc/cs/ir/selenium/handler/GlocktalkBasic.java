@@ -131,8 +131,10 @@ public class GlocktalkBasic implements InteractiveSeleniumHandler {
                        e.printStackTrace();
                }
                finally {
-                       if(driver != null)
+                       if(driver != null) {
+                    	   	   driver.close();
                                driver.quit();
+                       }
                }
        }
        
