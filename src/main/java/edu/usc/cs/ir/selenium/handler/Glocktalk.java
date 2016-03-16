@@ -69,6 +69,9 @@ import edu.usc.cs.ir.selenium.model.InteractiveSeleniumHandler;
  */
 public class Glocktalk implements InteractiveSeleniumHandler {
 
+	   // Number of pages to navigation pages to fetch in one round of crawl 
+	   private static final Integer PAGE_FETCH_LIMIT = 5;
+	
 	   private Set<String> getThreadsFromForum(WebDriver driver) {
 		   Set<String> threads = new HashSet<String>();
 		   List<WebElement> threadTopics = driver.findElements(By.xpath("//h3[@class='title']"));
@@ -116,20 +119,28 @@ public class Glocktalk implements InteractiveSeleniumHandler {
                if(driver.getCurrentUrl().startsWith("http://www.glocktalk.com/forum")) {
             	   	   // Extract the last page number
             	       List<WebElement> pages = driver.findElements(By.xpath("//div[@class='PageNav']//nav//a[@class='']"));
-            	   	   
             	       buffer.append(getThreadsFromForum(driver)).append("\n");
             	       
-            	       if(pages != null && !pages.isEmpty() && !pages.get(0).getText().trim().equals("1")) {
-            	    	   Integer lastPage = Integer.parseInt(pages.get(pages.size() - 1).getText());
+            	       if(pages != null && !pages.isEmpty()) {
             	    	   
-            	    	   for(int i = 2; i <= lastPage; i++) {
-            	    		   try {
-	            	    		   driver.get(driver.getCurrentUrl().substring(0, driver.getCurrentUrl().lastIndexOf("/") + 1) + "page-" + i);
-            	    		   } catch(TimeoutException e) {
-            	    			   System.out.println("Timeout Exception for page = " + i);
-            	    		   } finally {
-            	    			   buffer.append(getThreadsFromForum(driver)).append("\n");
-            	    		   }
+            	    	   WebElement currentPage = driver.findElement(By.xpath("//div[@class='PageNav']//nav//a[@class='currentPage ']"));
+            	    	   Integer currentPageNo = Integer.parseInt(currentPage.getText());
+            	    	   if(currentPageNo == 1 || currentPageNo % PAGE_FETCH_LIMIT == 0) {
+	            	    	   Integer lastPage = Integer.parseInt(pages.get(pages.size() - 1).getText());
+	            	    	   String currentUrl = driver.getCurrentUrl().substring(0, driver.getCurrentUrl().lastIndexOf("/") + 1);
+	            	    	   int i = currentPageNo + 1;
+	            	    	   for(; i < (currentPageNo + PAGE_FETCH_LIMIT) && i <= lastPage; i++) {
+	            	    		   try {
+		            	    		   driver.get(currentUrl + "page-" + i);
+	            	    		   } catch(TimeoutException e) {
+	            	    			   System.out.println("Timeout Exception for page = " + i);
+	            	    		   } finally {
+	            	    			   buffer.append(getThreadsFromForum(driver)).append("\n");
+	            	    		   }
+	            	    	   }
+	            	    	   
+	            	    	   if(i <= lastPage)
+	            	    		   buffer.append("<a href=\"").append(currentUrl + "page-" + i).append("\" />").append("\n");
             	    	   }
             	       }
                }
@@ -139,19 +150,28 @@ public class Glocktalk implements InteractiveSeleniumHandler {
             	       
             	       // Extract the last page number
             	       List<WebElement> pages = driver.findElements(By.xpath("//div[@class='PageNav']//nav//a[@class='']"));
-            	       
             	       buffer.append(getPostsFromThread(driver)).append("\n");
-            	       if(pages != null && !pages.isEmpty() && !pages.get(0).getText().trim().equals("1")) {
-            	    	   Integer lastPage = Integer.parseInt(pages.get(pages.size() - 1).getText());
+            	       
+            	       if(pages != null && !pages.isEmpty()) {
             	    	   
-            	    	   for(int i = 2; i <= lastPage; i++) {
-            	    		   try {
-	            	    		   driver.get(driver.getCurrentUrl().substring(0, driver.getCurrentUrl().lastIndexOf("/") + 1) + "page-" + i);
-            	    		   } catch(TimeoutException e) {
-            	    			   System.out.println("Timeout Exception for page = " + i);
-            	    		   } finally {
-            	    			   buffer.append(getPostsFromThread(driver)).append("\n");
-            	    		   }
+            	    	   WebElement currentPage = driver.findElement(By.xpath("//div[@class='PageNav']//nav//a[@class='currentPage ']"));
+            	    	   Integer currentPageNo = Integer.parseInt(currentPage.getText());
+            	    	   if(currentPageNo == 1 || currentPageNo % PAGE_FETCH_LIMIT == 0) {
+	            	    	   Integer lastPage = Integer.parseInt(pages.get(pages.size() - 1).getText());
+	            	    	   String currentUrl = driver.getCurrentUrl().substring(0, driver.getCurrentUrl().lastIndexOf("/") + 1);
+	            	    	   int i = currentPageNo + 1;
+	            	    	   for(; i < (currentPageNo + PAGE_FETCH_LIMIT) && i <= lastPage; i++) {
+	            	    		   try {
+		            	    		   driver.get(currentUrl + "page-" + i);
+	            	    		   } catch(TimeoutException e) {
+	            	    			   System.out.println("Timeout Exception for page = " + i);
+	            	    		   } finally {
+	            	    			   buffer.append(getPostsFromThread(driver)).append("\n");
+	            	    		   }
+	            	    	   }
+	            	    	   
+	            	    	   if(i <= lastPage)
+	            	    		   buffer.append("<a href=\"").append(currentUrl + "page-" + i).append("\" />").append("\n");
             	    	   }
             	       }
             	       
@@ -197,7 +217,7 @@ public class Glocktalk implements InteractiveSeleniumHandler {
                driver.manage().timeouts().pageLoadTimeout(10000, TimeUnit.MILLISECONDS);
                
                try {
-                       driver.get("http://www.glocktalk.com/members/98_1le.51093/");
+                       driver.get("http://www.glocktalk.com/threads/rimfire-pics.726737/page-10");
                        System.out.println(new String(glocktalk.processDriver(driver).getBytes("UTF-8")));
                } 
                catch(Exception e) {
