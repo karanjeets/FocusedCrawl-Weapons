@@ -118,7 +118,7 @@ public class Arguntrader implements InteractiveSeleniumHandler {
        				}
        				
             	   }
-                   //e.printStackTrace();
+                   e.printStackTrace();
                }
                finally {
                        if(driver != null) {
