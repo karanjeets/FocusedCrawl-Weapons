@@ -19,6 +19,7 @@ package edu.usc.cs.ir.htmlunit.handler;
 import java.util.concurrent.TimeUnit;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.Capabilities;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
@@ -26,6 +27,7 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.htmlunit.HtmlUnitDriver;
 import org.openqa.selenium.io.TemporaryFilesystem;
 
+import com.gargoylesoftware.htmlunit.BrowserVersion;
 import com.gargoylesoftware.htmlunit.WebClient;
 
 public class HtmlUnitWebDriver extends HtmlUnitDriver {
@@ -37,7 +39,8 @@ public class HtmlUnitWebDriver extends HtmlUnitDriver {
   private static int maxRedirects;
   
   public HtmlUnitWebDriver() {
-    super(enableJavascript);
+    super(BrowserVersion.INTERNET_EXPLORER_11);
+    //super(enableJavascript);
   }
   
   @Override
@@ -47,9 +50,9 @@ public class HtmlUnitWebDriver extends HtmlUnitDriver {
     client.getOptions().setRedirectEnabled(enableRedirect);
     if(enableJavascript)
       client.setJavaScriptTimeout(javascriptTimeout);
-      client.getOptions().setThrowExceptionOnScriptError(false);
-      if(enableRedirect)
-        client.addWebWindowListener(new HtmlUnitWebWindowListener(maxRedirects));
+    client.getOptions().setThrowExceptionOnScriptError(true);
+    if(enableRedirect)
+      client.addWebWindowListener(new HtmlUnitWebWindowListener(maxRedirects));
 	  return client;
   }
   
@@ -57,8 +60,8 @@ public class HtmlUnitWebDriver extends HtmlUnitDriver {
     long pageLoadTimout = 3;
     enableJavascript = true;
     enableCss = false;
-    javascriptTimeout = 3500;
-    int redirects = 0;
+    javascriptTimeout = 13500;
+    int redirects = 4;
     enableRedirect = redirects <= 0 ? false : true;
     maxRedirects = redirects;
 	  

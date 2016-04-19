@@ -68,10 +68,10 @@ public class Arguntrader implements InteractiveSeleniumHandler {
 	        		password.sendKeys("password");
 	        		driver.findElement(By.className("button1")).click();
 	        		
-	        		(new WebDriverWait(driver, 10)).until(new ExpectedCondition<Boolean>() {
+	        		(new WebDriverWait(driver, 8)).until(new ExpectedCondition<Boolean>() {
 	                    public Boolean apply(WebDriver d) {
 	                    	try {
-	    						Thread.sleep(8000);
+	    						Thread.sleep(5000);
 	    					} catch (InterruptedException e) {
 	    						e.printStackTrace();
 	    					}

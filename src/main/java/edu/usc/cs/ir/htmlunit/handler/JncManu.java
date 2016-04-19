@@ -24,6 +24,8 @@ import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedCondition;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
 import edu.usc.cs.ir.htmlunit.model.InteractiveHtmlUnitHandler;
 
@@ -38,33 +40,22 @@ import edu.usc.cs.ir.htmlunit.model.InteractiveHtmlUnitHandler;
  * @author karanjeets
  *
  */
-public class Sturmgewehr implements InteractiveHtmlUnitHandler {
+public class JncManu implements InteractiveHtmlUnitHandler {
 
-       public String processDriver(WebDriver driver) {
-    	   	  StringBuffer buffer = new StringBuffer();
-            
-    	   	 WebElement posts = driver.findElement(By.xpath("//div[@class='ipsBox']//ol"));
-    	   	 buffer.append((String)((JavascriptExecutor)driver).executeScript("return arguments[0].innerHTML;", posts)).append("\n\n"); 
-    	   	  
-    	   	  int lastPage = Integer.parseInt(driver.findElement(By.xpath("//li[@class='ipsPagination_last']//a")).getAttribute("data-page"));
-    	   	  
-    	   	  for(int i = 2; i <= lastPage; i++)
-    	   	    buffer.append("<a href=\"").append(driver.getCurrentUrl()).append("&page=").append(i).append("\" />\n");
-    	   	  
-            return buffer.toString();
-       }
+  public String processDriver(final WebDriver driver) {
+        
+           return driver.getPageSource().replaceAll("&amp;", "&");
+    }
 
        public boolean shouldProcessURL(String URL) {
-           if (URL.startsWith("http://www.sturmgewehr.com/forums") && !URL.contains("&page=") && URL.contains("/forum/"))    
-        	   return true;
-           return false;
+           return true;
        }
        
        public static void main(String[] args) {
-               Sturmgewehr glocktalk = new Sturmgewehr();
+               JncManu glocktalk = new JncManu();
                WebDriver driver = null;
                try {
-                       driver = HtmlUnitWebDriver.getDriverForPage("http://www.sturmgewehr.com/forums/index.php?/forum/8-parts-and-accessories-market-board/");
+                       driver = HtmlUnitWebDriver.getDriverForPage("http://www.jncmanufacturing.com");
                        System.out.println(new String(glocktalk.processDriver(driver).getBytes("UTF-8")));
                } 
                catch(Exception e) {
