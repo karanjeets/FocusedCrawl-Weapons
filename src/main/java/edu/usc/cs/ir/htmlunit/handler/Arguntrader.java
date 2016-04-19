@@ -20,7 +20,6 @@ package edu.usc.cs.ir.htmlunit.handler;
 import java.io.UnsupportedEncodingException;
 
 import org.openqa.selenium.By;
-import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -60,34 +59,29 @@ public class Arguntrader implements InteractiveHtmlUnitHandler {
               });
         }
            
-           //System.out.println();
            return driver.getPageSource().replaceAll("&amp;", "&");
     }
 
        public boolean shouldProcessURL(String URL) {
-           if (URL.startsWith("http://www.sturmgewehr.com/forums") && !URL.contains("&page=") && URL.contains("/forum/"))    
-        	   return true;
-           return false;
+           return true;
        }
        
        public static void main(String[] args) {
-               Arguntrader glocktalk = new Arguntrader();
+               Arguntrader arguntrader = new Arguntrader();
                WebDriver driver = null;
                try {
                        driver = HtmlUnitWebDriver.getDriverForPage("http://arguntrader.com/viewforum.php?f=8");
-                       System.out.println(new String(glocktalk.processDriver(driver).getBytes("UTF-8")));
+                       System.out.println(new String(arguntrader.processDriver(driver).getBytes("UTF-8")));
                } 
                catch(Exception e) {
             	   if(e instanceof TimeoutException) {
             		   System.out.println("Timeout Exception");
             		   
             		   try {
-       					System.out.println(new String(glocktalk.processDriver(driver).getBytes("UTF-8")));
+       					System.out.println(new String(arguntrader.processDriver(driver).getBytes("UTF-8")));
        				} catch (UnsupportedEncodingException e1) {
-       					// TODO Auto-generated catch block
        					e1.printStackTrace();
        				}
-       				
             	   }
             	   if(driver != null)
             	     HtmlUnitWebDriver.cleanUpDriver(driver);
